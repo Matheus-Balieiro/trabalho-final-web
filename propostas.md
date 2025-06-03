@@ -13,11 +13,11 @@ Desperdício de alimentos por falta de ideias para utilizá-los antes que estrag
 Estudantes, pessoas que moram sozinhas, famílias que querem economizar ou evitar o desperdício.
 
 ### Funcionalidades
-1.Campo para inserir ingredientes disponíveis
-1.Geração de receitas automáticas com base nos ingredientes
-1.Marcar receitas favoritas
-1.Filtro por tempo de preparo, nível de dificuldade e tipo de refeição
-1.Sugestões de compra baseadas nas receitas preferidas.
+1. Campo para inserir ingredientes disponíveis
+1. Geração de receitas automáticas com base nos ingredientes
+1. Marcar receitas favoritas
+1. Filtro por tempo de preparo, nível de dificuldade e tipo de refeição
+1. Sugestões de compra baseadas nas receitas preferidas.
 
 ---
 
