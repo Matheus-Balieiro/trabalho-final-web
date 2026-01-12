@@ -5,25 +5,147 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin | SkillSwap</title>
   <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .admin-container {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    .user-admin-card {
+      background: #1e293b;
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .user-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #38bdf8;
+    }
+    .delete-btn {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .delete-btn:hover {
+      background: #dc2626;
+    }
+    .section-title {
+      color: #38bdf8;
+      margin: 2rem 0 1.5rem;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
   <header>
     <h1>Painel Administrativo</h1>
     <p>Gerencie usuários, habilidades e matches</p>
-  </header>
-  <main>
-    <div style="text-align: center; padding: 2rem;">
-      <h2>Bem-vindo, Administrador!</h2>
-      <p>Este é o painel de controle do SkillSwap.</p>
-      <ul style="list-style: none; margin: 2rem 0; padding: 0;">
-        <li><a href="#" style="display: block; margin: 0.5rem 0; color: #4a6fa5;">👥 Gerenciar Usuários</a></li>
-        <li><a href="#" style="display: block; margin: 0.5rem 0; color: #4a6fa5;">🛠️ Gerenciar Habilidades</a></li>
-        <li><a href="#" style="display: block; margin: 0.5rem 0; color: #4a6fa5;">🤝 Ver Matches Sugeridos</a></li>
-      </ul>
-      <p>
-        <a href="login.html" style="color: #d9534f;">Sair</a>
-      </p>
+    <div style="text-align: center; margin-top: 1rem;">
+      <a href="login.html" class="btn-login">Sair</a>
     </div>
+  </header>
+
+  <main class="admin-container">
+    <h2 class="section-title">👥 Gerenciar Usuários</h2>
+    <div id="loading">Carregando usuários...</div>
+    <div id="users-list"></div>
   </main>
+
+  <script>
+    const API_URL = 'https://back-end-tf-web-beryl.vercel.app';
+    if (!localStorage.getItem('isAdmin')) {
+    alert('Acesso restrito! Faça login primeiro.');
+    window.location.href = 'login.html';
+  }
+
+  // Função para sair
+  function logoutAdmin() {
+    localStorage.removeItem('isAdmin');
+    window.location.href = 'login.html';
+  }
+    
+    // Carrega todos os usuários
+    async function loadUsers() {
+      try {
+        const res = await fetch(`${API_URL}/usuarios`);
+        if (!res.ok) throw new Error('Falha ao carregar usuários');
+        const users = await res.json();
+        renderUsers(users);
+      } catch (err) {
+        document.getElementById('loading').textContent = 'Erro: ' + err.message;
+        console.error(err);
+      }
+    }
+
+    function renderUsers(users) {
+      const container = document.getElementById('users-list');
+      const loading = document.getElementById('loading');
+      loading.style.display = 'none';
+
+      if (!Array.isArray(users) || users.length === 0) {
+        container.innerHTML = '<p style="color: #94a3b8; text-align: center;">Nenhum usuário encontrado.</p>';
+        return;
+      }
+
+      container.innerHTML = users.map(user => {
+        const photoUrl = user.photo_url || '../images/default-avatar.png';
+        return `
+          <div class="user-admin-card">
+            <div class="user-info">
+              <img src="${photoUrl}" alt="Foto de ${user.name}" class="user-avatar" />
+              <div>
+                <strong>${user.name}</strong><br>
+                <small>${user.email}</small>
+              </div>
+            </div>
+            <button class="delete-btn" onclick="deleteUser(${user.id})">Excluir</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Exclui um usuário
+    async function deleteUser(userId) {
+      if (!confirm('Tem certeza que deseja excluir este usuário? Esta ação é irreversível.')) {
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_URL}/usuarios/${userId}`, {
+          method: 'DELETE'
+        });
+
+        if (res.ok) {
+          alert('Usuário excluído com sucesso!');
+          loadUsers(); // Recarrega a lista
+        } else {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.mensagem || 'Erro ao excluir usuário');
+        }
+      } catch (err) {
+        alert('Erro: ' + err.message);
+        console.error(err);
+      }
+    }
+
+    // Inicializa
+    loadUsers();
+  </script>
 </body>
 </html>

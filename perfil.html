@@ -1,17 +1,15 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Perfil - SkillSwap</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
-
 <body>
   <header>
     <h1>Perfil do Usuário</h1>
-    <button onclick="history.back()" class="btn-back">← Voltar</button>
+    <button onclick="history.back()" class="btn-login" style="margin-top:1rem;">← Voltar</button>
   </header>
 
   <main>
@@ -22,15 +20,12 @@
   <script>
     const API_URL = 'https://back-end-tf-web-beryl.vercel.app';
 
-    // Pega os parâmetros da URL
     const urlParams = new URLSearchParams(window.location.search);
-    const profileUserId = parseInt(urlParams.get('id')); // Perfil que está sendo visualizado
+    const profileUserId = parseInt(urlParams.get('id'));
 
-    // Obtém o usuário logado do localStorage
     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
     const currentUserId = currentUser ? currentUser.id : null;
 
-    // Verifica se o perfil é válido
     if (!profileUserId || isNaN(profileUserId)) {
       document.getElementById('loading').textContent = 'ID de usuário inválido.';
     } else {
@@ -45,42 +40,42 @@
 
         document.getElementById('loading').style.display = 'none';
 
-        // Mostra botão só se estiver logado E for outro usuário
         const showMatchButton = (myId && myId !== userId);
 
         document.getElementById('profile').innerHTML = `
-        <div class="user-profile">
-          <h2>${user.name}</h2>
-          <p><strong>E-mail:</strong> ${user.email}</p>
-          <p><strong>Contato:</strong> ${user.contact || 'Não informado'}</p>
+          <div class="user-profile">
+            ${user.photo_url ? `<img src="${user.photo_url}" alt="Foto de ${user.name}" style="width:120px;height:120px;border-radius:50%;object-fit:cover;margin-bottom:1rem;">` : ''}
+            <h2>${user.name}</h2>
+            <p><strong>E-mail:</strong> ${user.email}</p>
+            <p><strong>Contato:</strong> ${user.contact || 'Não informado'}</p>
 
-          <h3>Habilidades que oferece:</h3>
-          <ul>
-            ${(user.skillsOffered?.length > 0
-            ? user.skillsOffered.map(s => `<li><strong>${s.skill_name}</strong> (${s.level})<br>${s.description || ''}</li>`).join('')
-            : '<li>Nenhuma habilidade cadastrada</li>'
-          )}
-          </ul>
+            <h3>Habilidades que oferece:</h3>
+            <ul>
+              ${(user.skillsOffered?.length > 0
+                ? user.skillsOffered.map(s => `<li><strong>${s.skill_name}</strong> (${s.level})<br>${s.description || ''}</li>`).join('')
+                : '<li>Nenhuma habilidade cadastrada</li>'
+              )}
+            </ul>
 
-          <h3>Habilidades que deseja aprender:</h3>
-          <ul>
-            ${(user.skillsWanted?.length > 0
-            ? user.skillsWanted.map(s => `<li><strong>${s.skill_name}</strong> (${s.level})<br>${s.description || ''}</li>`).join('')
-            : '<li>Nenhuma habilidade desejada</li>'
-          )}
-          </ul>
+            <h3>Habilidades que deseja aprender:</h3>
+            <ul>
+              ${(user.skillsWanted?.length > 0
+                ? user.skillsWanted.map(s => `<li><strong>${s.skill_name}</strong> (${s.level})<br>${s.description || ''}</li>`).join('')
+                : '<li>Nenhuma habilidade desejada</li>'
+              )}
+            </ul>
 
-          ${showMatchButton ? `
-            <button onclick="requestMatch(${myId}, ${userId})" class="btn-match">
-              🤝 Solicitar Match
-            </button>
-          ` : !myId ? `
-            <p style="margin-top: 1rem; color: #f87171;">
-              ⚠️ Faça login para solicitar um match.
-            </p>
-          ` : ''}
-        </div>
-      `;
+            ${showMatchButton ? `
+              <button onclick="requestMatch(${myId}, ${userId})" class="btn-match">
+                🤝 Solicitar Match
+              </button>
+            ` : !myId ? `
+              <p style="margin-top: 1rem; color: #f87171;">
+                ⚠️ Faça login para solicitar um match.
+              </p>
+            ` : ''}
+          </div>
+        `;
       } catch (err) {
         document.getElementById('loading').textContent = 'Erro ao carregar perfil: ' + err.message;
         console.error(err);
@@ -88,31 +83,25 @@
     }
 
     function requestMatch(myId, targetId) {
-      if (!myId || !targetId) {
-        alert('Erro: dados incompletos.');
-        return;
-      }
-
       fetch(`${API_URL}/matches`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_a_id: myId, user_b_id: targetId })
       })
-        .then(res => {
-          if (res.ok) {
-            alert('✅ Solicitação de match enviada com sucesso!');
-          } else {
-            return res.json().then(err => {
-              throw new Error(err.erro || 'Erro ao enviar solicitação.');
-            });
-          }
-        })
-        .catch(err => {
-          console.error(err);
-          alert('❌ Falha ao enviar solicitação:\n' + err.message);
-        });
+      .then(res => {
+        if (res.ok) {
+          alert('✅ Solicitação de match enviada com sucesso!');
+        } else {
+          return res.json().then(err => {
+            throw new Error(err.erro || 'Erro ao enviar solicitação.');
+          });
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert('❌ Falha ao enviar solicitação:\n' + err.message);
+      });
     }
   </script>
 </body>
-
 </html>

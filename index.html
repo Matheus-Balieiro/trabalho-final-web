@@ -1,20 +1,81 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SkillSwap - Troque Habilidades</title>
   <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 2rem;
+      background-color: #1e293b;
+      border-bottom: 1px solid #334155;
+    }
+    .header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .header-title {
+      color: #38bdf8;
+      font-size: 2.5rem;
+      margin: 0;
+    }
+    .header-subtitle {
+      color: #cbd5e1;
+      font-size: 1rem;
+      margin: 0;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .profile-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      cursor: pointer;
+      border: 2px solid #38bdf8;
+      transition: opacity 0.2s;
+    }
+    .profile-avatar:hover {
+      opacity: 0.8;
+    }
+    .btn-login {
+      padding: 0.75rem 1.5rem;
+      background-color: #38bdf8;
+      color: #0f172a;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 1rem;
+      white-space: nowrap;
+    }
+    .btn-login:hover {
+      background-color: #0ea5e9;
+    }
+  </style>
 </head>
-
 <body>
-  <header>
-    <h1>SkillSwap</h1>
-    <p>Troque conhecimentos sem usar dinheiro!</p>
-    <!-- Área de autenticação (dinâmica) -->
+<header class="header-container">
+  <div class="header-left">
+    <h1 class="header-title">SkillSwap</h1>
+    <p class="header-subtitle">Troque conhecimentos sem usar dinheiro!</p>
+  </div>
+  <div class="header-right">
+    <img id="header-avatar" src="" alt="Seu perfil" class="profile-avatar" style="display: none;" />
     <div id="auth-container"></div>
-  </header>
+    <!-- Nova aba de matches (só aparece quando logado) -->
+    <div id="matches-link" style="display: none;">
+      <a href="matches.html" class="btn-login">Matches</a>
+    </div>
+  </div>
+</header>
 
   <main>
     <div id="loading">Carregando usuários...</div>
@@ -26,87 +87,102 @@
   </footer>
 
   <script>
-    const API_URL = 'https://back-end-tf-web-beryl.vercel.app';
+  const API_URL = 'https://back-end-tf-web-beryl.vercel.app';
 
-    // Atualiza interface com base no login
-    function updateAuthUI() {
-      const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-      const authContainer = document.getElementById('auth-container');
+  function updateAuthUI() {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  const avatarImg = document.getElementById('header-avatar');
+  const authContainer = document.getElementById('auth-container');
+  const matchesLink = document.getElementById('matches-link');
 
-      if (currentUser) {
-        authContainer.innerHTML = `
-          <div style="margin-top: 1rem; display: flex; align-items: center; gap: 1rem; justify-content: center;">
-            <span>Olá, ${currentUser.name}!</span>
-            <a href="meu-perfil.html" class="btn-login">Meu Perfil</a>
-          </div>
-        `;
-      } else {
-        authContainer.innerHTML = `
-          <a href="login.html" class="btn-login" style="margin-top: 1rem; display: inline-block;">Entrar</a>
-        `;
+  if (currentUser) {
+    // Mostra avatar
+    const photoUrl = currentUser.photo_url || 'images/default-avatar.png';
+    avatarImg.src = photoUrl;
+    avatarImg.style.display = 'block';
+    avatarImg.onclick = () => {
+      if (confirm('Deseja sair da sua conta?')) {
+        localStorage.removeItem('currentUser');
+        updateAuthUI();
+        loadUsers();
       }
+    };
+
+    // Mostra "Meu Perfil"
+    if (authContainer) {
+      authContainer.innerHTML = `<a href="meu-perfil.html" class="btn-login">Meu Perfil</a>`;
     }
 
-    async function loadUsers() {
-      try {
-        const res = await fetch(`${API_URL}/usuarios`);
-        if (!res.ok) throw new Error('Falha ao carregar usuários');
-        const users = await res.json();
-        renderUsers(users);
-      } catch (err) {
-        document.getElementById('loading').textContent = 'Erro ao carregar dados.';
-        console.error("Erro:", err);
-      }
+    // Mostra aba de matches
+    if (matchesLink) matchesLink.style.display = 'block';
+  } else {
+    // Esconde tudo
+    avatarImg.style.display = 'none';
+    if (authContainer) {
+      authContainer.innerHTML = `<a href="login.html" class="btn-login">Entrar</a>`;
+    }
+    if (matchesLink) matchesLink.style.display = 'none';
+  }
+}
+
+  async function loadUsers() {
+    try {
+      const res = await fetch(`${API_URL}/usuarios`);
+      if (!res.ok) throw new Error('Falha ao carregar usuários');
+      const users = await res.json();
+      renderUsers(users);
+    } catch (err) {
+      document.getElementById('loading').textContent = 'Erro ao carregar dados.';
+      console.error("Erro:", err);
+    }
+  }
+
+  function renderUsers(users) {
+    const container = document.getElementById('users');
+    const loading = document.getElementById('loading');
+    loading.style.display = 'none';
+
+    if (!Array.isArray(users) || users.length === 0) {
+      container.innerHTML = '<p>Nenhum usuário encontrado.</p>';
+      return;
     }
 
-    function renderUsers(users) {
-      const container = document.getElementById('users');
-      const loading = document.getElementById('loading');
-      loading.style.display = 'none';
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    const currentUserId = currentUser ? currentUser.id : null;
 
-      if (!Array.isArray(users) || users.length === 0) {
-        container.innerHTML = '<p>Nenhum usuário encontrado.</p>';
-        return;
-      }
+    const filteredUsers = currentUserId
+      ? users.filter(user => user.id !== currentUserId)
+      : users;
 
-      // Obtém o ID do usuário logado
-      const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-      const currentUserId = currentUser ? currentUser.id : null;
-
-      // Filtra: remove o próprio usuário da lista
-      const filteredUsers = currentUserId
-        ? users.filter(user => user.id !== currentUserId)
-        : users;
-
-      if (filteredUsers.length === 0) {
-        container.innerHTML = '<p>Nenhum outro usuário encontrado.</p>';
-        return;
-      }
-
-      container.innerHTML = filteredUsers.map(user => {
-        const offered = user.skillsOffered || [];
-        const profileUrl = `perfil.html?id=${user.id}`;
-
-        return `
-      <div class="user-card" onclick="window.location.href='${profileUrl}'">
-        <h3>${user.name || 'Sem nome'}</h3>
-        <p><strong>Contato:</strong> ${user.contact || 'Não informado'}</p>
-        <h4>Habilidades que oferece:</h4>
-        <ul>
-          ${offered.length > 0
-            ? offered.map(s => `<li><strong>${s.skill_name || s.name || 'Habilidade'}</strong> (${s.level || 'nível?'})<br>${s.description || ''}</li>`).join('')
-            : '<li>Nenhuma habilidade cadastrada</li>'
-          }
-        </ul>
-      </div>
-    `;
-      }).join('');
+    if (filteredUsers.length === 0) {
+      container.innerHTML = '<p>Nenhum outro usuário encontrado.</p>';
+      return;
     }
 
-    // Inicializa
-    updateAuthUI();
-    loadUsers();
-  </script>
+    container.innerHTML = filteredUsers.map(user => {
+      const offered = user.skillsOffered || [];
+      const profileUrl = `perfil.html?id=${user.id}`;
+      const photoUrl = user.photo_url || 'images/default-avatar.png'; // ← Fallback
+
+      return `
+        <div class="user-card" onclick="window.location.href='${profileUrl}'">
+          <img src="${photoUrl}" alt="Foto de ${user.name}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;margin-bottom:0.8rem;">
+          <h3>${user.name || 'Sem nome'}</h3>
+          <p><strong>Contato:</strong> ${user.contact || 'Não informado'}</p>
+          <h4>Habilidades que oferece:</h4>
+          <ul>
+            ${offered.length > 0
+              ? offered.map(s => `<li><strong>${s.skill_name}</strong> (${s.level})<br>${s.description || ''}</li>`).join('')
+              : '<li>Nenhuma habilidade cadastrada</li>'
+            }
+          </ul>
+        </div>
+      `;
+    }).join('');
+  }
+
+  updateAuthUI();
+  loadUsers();
+</script>
 </body>
-
 </html>

@@ -13,20 +13,17 @@
   </header>
 
   <main style="max-width: 500px; margin: 2rem auto;">
-    <!-- Abas: Login / Cadastro -->
     <div style="display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 2px solid #334155;">
       <button id="tabLogin" class="btn" style="background:#38bdf8;color:#0f172a;" onclick="showTab('login')">Login</button>
       <button id="tabRegister" class="btn" style="background:#1e293b;color:#cbd5e1;" onclick="showTab('register')">Cadastrar</button>
     </div>
 
-    <!-- Formulário de Login -->
     <div id="loginForm">
       <input type="email" id="loginEmail" placeholder="E-mail" required style="width:100%; padding:0.75rem; margin:0.5rem 0; border-radius:8px; border:1px solid #475569; background:#334155; color:#f1f5f9;" />
       <input type="password" id="loginPassword" placeholder="Senha" required style="width:100%; padding:0.75rem; margin:0.5rem 0; border-radius:8px; border:1px solid #475569; background:#334155; color:#f1f5f9;" />
       <button onclick="handleLogin()" class="btn" style="width:100%; background:#38bdf8; color:#0f172a; margin-top:1rem;">Entrar</button>
     </div>
 
-    <!-- Formulário de Cadastro -->
     <div id="registerForm" style="display:none;">
       <input type="text" id="regName" placeholder="Nome completo" required style="width:100%; padding:0.75rem; margin:0.5rem 0; border-radius:8px; border:1px solid #475569; background:#334155; color:#f1f5f9;" />
       <input type="email" id="regEmail" placeholder="E-mail" required style="width:100%; padding:0.75rem; margin:0.5rem 0; border-radius:8px; border:1px solid #475569; background:#334155; color:#f1f5f9;" />
@@ -47,7 +44,6 @@
       document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
       document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
       
-      // Estilo dos botões
       document.getElementById('tabLogin').style.background = tab === 'login' ? '#38bdf8' : '#1e293b';
       document.getElementById('tabLogin').style.color = tab === 'login' ? '#0f172a' : '#cbd5e1';
       document.getElementById('tabRegister').style.background = tab === 'register' ? '#38bdf8' : '#1e293b';

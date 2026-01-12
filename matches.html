@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Meus Matches - SkillSwap</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .matches-tabs {
+      display: flex;
+      gap: 1rem;
+      margin: 2rem 0;
+      border-bottom: 2px solid #334155;
+    }
+    .tab-btn {
+      padding: 0.75rem 1.5rem;
+      background: #1e293b;
+      color: #cbd5e1;
+      border: none;
+      border-radius: 8px 8px 0 0;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .tab-btn.active {
+      background: #38bdf8;
+      color: #0f172a;
+    }
+    .match-card {
+      background: #1e293b;
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    .match-status {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      margin-left: 0.5rem;
+    }
+    .status-suggested { background: #f59e0b; color: #0f172a; }
+    .status-accepted { background: #10b981; color: white; }
+    .status-declined { background: #ef4444; color: white; }
+    .action-buttons {
+      margin-top: 1rem;
+    }
+    .action-btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-right: 0.5rem;
+    }
+    .btn-accept { background: #10b981; color: white; }
+    .btn-decline { background: #ef4444; color: white; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Meus Matches</h1>
+    <button onclick="history.back()" class="btn-login" style="margin-top:1rem;">← Voltar</button>
+  </header>
+
+  <main style="max-width: 800px; margin: 2rem auto; padding: 0 1rem;">
+    <div id="loading">Carregando matches...</div>
+    <div id="matches-content" style="display: none;">
+      <!-- Abas -->
+      <div class="matches-tabs">
+        <button class="tab-btn active" data-tab="received">Recebidos</button>
+        <button class="tab-btn" data-tab="sent">Enviados</button>
+      </div>
+
+      <!-- Conteúdo -->
+      <div id="received-matches"></div>
+      <div id="sent-matches" style="display: none;"></div>
+    </div>
+  </main>
+
+  <script>
+    const API_URL = 'https://back-end-tf-web-beryl.vercel.app';
+    let currentUser = null;
+
+    function checkAuth() {
+      const storedUser = JSON.parse(localStorage.getItem('currentUser'));
+      if (!storedUser) {
+        alert('Você precisa estar logado para ver seus matches.');
+        window.location.href = 'index.html';
+        return false;
+      }
+      currentUser = storedUser;
+      return true;
+    }
+
+    async function loadMatches() {
+      if (!checkAuth()) return;
+
+      try {
+        const res = await fetch(`${API_URL}/matches?user_id=${currentUser.id}`);
+        if (!res.ok) throw new Error('Falha ao carregar matches');
+        const matches = await res.json();
+        renderMatches(matches);
+      } catch (err) {
+        document.getElementById('loading').textContent = 'Erro ao carregar matches: ' + err.message;
+        console.error(err);
+      }
+    }
+
+    function renderMatches(allMatches) {
+  const receivedContainer = document.getElementById('received-matches');
+  const sentContainer = document.getElementById('sent-matches');
+
+  // Filtra matches
+  const received = allMatches.filter(m => m.user_b_id === currentUser.id);
+  const sent = allMatches.filter(m => m.user_a_id === currentUser.id);
+
+  // Renderiza recebidos
+  if (received.length === 0) {
+    receivedContainer.innerHTML = '<p style="color: #94a3b8;">Nenhum match recebido.</p>';
+  } else {
+    receivedContainer.innerHTML = received.map(m => `
+      <div class="match-card">
+        <h3 onclick="window.location.href='perfil.html?id=${m.other_user.id}'" 
+            style="cursor: pointer; color: #38bdf8; text-decoration: underline;">
+          ${m.other_user.name}
+        </h3>
+        <p><strong>Status:</strong> 
+          <span class="match-status status-${m.status}">${formatStatus(m.status)}</span>
+        </p>
+        ${m.status === 'suggested' ? `
+          <div class="action-buttons">
+            <button class="action-btn btn-accept" onclick="updateMatchStatus(${m.id}, 'accepted')">Aceitar</button>
+            <button class="action-btn btn-decline" onclick="updateMatchStatus(${m.id}, 'declined')">Recusar</button>
+          </div>
+        ` : ''}
+      </div>
+    `).join('');
+  }
+
+  // Renderiza enviados
+  if (sent.length === 0) {
+    sentContainer.innerHTML = '<p style="color: #94a3b8;">Nenhum match enviado.</p>';
+  } else {
+    sentContainer.innerHTML = sent.map(m => `
+      <div class="match-card">
+        <h3 onclick="window.location.href='perfil.html?id=${m.other_user.id}'" 
+            style="cursor: pointer; color: #38bdf8; text-decoration: underline;">
+          ${m.other_user.name}
+        </h3>
+        <p><strong>Status:</strong> 
+          <span class="match-status status-${m.status}">${formatStatus(m.status)}</span>
+        </p>
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('matches-content').style.display = 'block';
+}
+
+    function formatStatus(status) {
+      const labels = {
+        'suggested': 'Pendente',
+        'accepted': 'Aceito',
+        'declined': 'Recusado',
+        'completed': 'Concluído'
+      };
+      return labels[status] || status;
+    }
+
+    // Troca de abas
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        const tab = btn.dataset.tab;
+        document.getElementById('received-matches').style.display = tab === 'received' ? 'block' : 'none';
+        document.getElementById('sent-matches').style.display = tab === 'sent' ? 'block' : 'none';
+      });
+    });
+
+    // Atualiza status do match
+    async function updateMatchStatus(matchId, newStatus) {
+      try {
+        const res = await fetch(`${API_URL}/matches/${matchId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
+
+        if (res.ok) {
+          loadMatches(); // Recarrega a lista
+        } else {
+          throw new Error('Falha ao atualizar');
+        }
+      } catch (err) {
+        alert('Erro ao atualizar match: ' + err.message);
+      }
+    }
+
+    loadMatches();
+  </script>
+</body>
+</html>
