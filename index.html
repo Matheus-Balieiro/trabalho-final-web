@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SkillSwap - Troque Habilidades</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header>
+    <h1>SkillSwap</h1>
+    <p>Troque conhecimentos sem usar dinheiro!</p>
+    <!-- Dentro do <header>, abaixo do <p> -->
+    <a href="login.html" class="btn-login">Entrar / Cadastrar</a>
+  </header>
+  <main>
+    <div id="loading">Carregando usuários...</div>
+    <div id="users" class="user-grid"></div>
+  </main>
+  <footer>
+    <p>&copy; 2025 SkillSwap — Samuel R. Caroba</p>
+  </footer>
+
+  <script>
+    // ✅ Remova os espaços!
+    const API_URL = 'https://back-end-tf-web-beryl.vercel.app';
+
+    async function loadUsers() {
+      try {
+        const res = await fetch(`${API_URL}/usuarios`);
+        if (!res.ok) throw new Error('Falha ao carregar usuários');
+        const users = await res.json();
+        
+        // 🔍 Depuração: veja no console o que está vindo
+        console.log("Usuários recebidos:", users);
+        
+        renderUsers(users);
+      } catch (err) {
+        document.getElementById('loading').textContent = 'Erro ao carregar dados.';
+        console.error("Erro:", err);
+      }
+    }
+
+    function renderUsers(users) {
+      const container = document.getElementById('users');
+      const loading = document.getElementById('loading');
+      loading.style.display = 'none';
+
+      if (!Array.isArray(users) || users.length === 0) {
+        container.innerHTML = '<p>Nenhum usuário encontrado.</p>';
+        return;
+      }
+
+      container.innerHTML = users.map(user => {
+        // 🔍 Verifique se skillsOffered existe
+        const offered = user.skillsOffered || [];
+        console.log("Habilidades de", user.name, ":", offered);
+
+        return `
+          <div class="user-card" onclick="window.location.href='perfil.html?id=${user.id}'">
+            <h3>${user.name || 'Sem nome'}</h3>
+            <p><strong>Contato:</strong> ${user.contact || 'Não informado'}</p>
+            <h4>Habilidades que oferece:</h4>
+            <ul>
+              ${offered.length > 0
+                ? offered.map(s => `<li><strong>${s.skill_name || s.name || 'Habilidade'}</strong> (${s.level || 'nível?'})<br>${s.description || ''}</li>`).join('')
+                : '<li>Nenhuma habilidade cadastrada</li>'
+              }
+            </ul>
+          </div>
+        `;
+      }).join('');
+    }
+
+    loadUsers();
+  </script>
+</body>
+</html>
