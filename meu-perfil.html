@@ -11,11 +11,271 @@
     <h1>Meu Perfil</h1>
     <button onclick="history.back()" class="btn-login" style="margin-top:1rem;">← Voltar</button>
   </header>
-  <main style="max-width: 700px; margin: 2rem auto;">
-    <p style="text-align:center; color:#94a3b8;">Esta página será desenvolvida em breve.</p>
-    <p style="text-align:center; margin-top:1rem;">
-      <a href="index.html" class="btn">Ir para Home</a>
-    </p>
+
+  <main style="max-width: 720px; margin: 2rem auto; padding: 0 1rem;">
+    <div id="loading">Carregando seu perfil...</div>
+    <div id="profile-form" style="display: none;">
+      <!-- Formulário de edição -->
+      <form id="editForm">
+        <div style="margin-bottom: 1.5rem;">
+          <label style="display: block; margin-bottom: 0.5rem; color: #cbd5e1;">Nome completo</label>
+          <input type="text" id="name" required style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #475569; background: #334155; color: #f1f5f9;" />
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+          <label style="display: block; margin-bottom: 0.5rem; color: #cbd5e1;">E-mail (não editável)</label>
+          <input type="email" id="email" disabled style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #475569; background: #334155; color: #94a3b8;" />
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+          <label style="display: block; margin-bottom: 0.5rem; color: #cbd5e1;">Contato</label>
+          <input type="text" id="contact" placeholder="Ex: WhatsApp, Telegram..." style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #475569; background: #334155; color: #f1f5f9;" />
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+          <label style="display: block; margin-bottom: 0.5rem; color: #cbd5e1;">Foto (URL)</label>
+          <input type="url" id="photo_url" placeholder="https://exemplo.com/foto.jpg" style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #475569; background: #334155; color: #f1f5f9;" />
+        </div>
+
+        <button type="submit" class="btn" style="width: 100%; background: #38bdf8; color: #0f172a;">Salvar Alterações</button>
+      </form>
+
+      <!-- Seção de Habilidades -->
+      <div style="margin-top: 3rem;">
+        <h2 style="color: #38bdf8; margin-bottom: 1.5rem;">Minhas Habilidades</h2>
+
+        <!-- Habilidades Oferecidas -->
+        <div style="margin-bottom: 2.5rem;">
+          <h3 style="color: #60a5fa; margin: 1.5rem 0 1rem;">Ofereço</h3>
+          <div id="offered-skills-list"></div>
+          <button type="button" onclick="showSkillModal('offered')" class="btn" style="background: #38bdf8; color: #0f172a; margin-top: 0.5rem;">+ Adicionar</button>
+        </div>
+
+        <!-- Habilidades Desejadas -->
+        <div>
+          <h3 style="color: #60a5fa; margin: 1.5rem 0 1rem;">Quero Aprender</h3>
+          <div id="wanted-skills-list"></div>
+          <button type="button" onclick="showSkillModal('wanted')" class="btn" style="background: #60a5fa; color: #0f172a; margin-top: 0.5rem;">+ Adicionar</button>
+        </div>
+      </div>
+    </div>
   </main>
+
+  <!-- Modal para adicionar/editar habilidade -->
+  <div id="skillModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <span onclick="closeSkillModal()" class="close">&times;</span>
+      <h3 id="modal-title">Adicionar Habilidade</h3>
+      <input type="hidden" id="skill-type" />
+      <input type="hidden" id="skill-id" />
+      
+      <input type="text" id="skill-name" placeholder="Nome da habilidade" required style="width:100%; padding:0.75rem; margin:0.5rem 0; border-radius:8px; border:1px solid #475569; background:#334155; color:#f1f5f9;" />
+      
+      <select id="skill-level" required style="width:100%; padding:0.75rem; margin:0.5rem 0; border-radius:8px; border:1px solid #475569; background:#334155; color:#f1f5f9;">
+        <option value="iniciante">Iniciante</option>
+        <option value="intermediario">Intermediário</option>
+        <option value="avançado">Avançado</option>
+      </select>
+      
+      <input type="text" id="skill-desc" placeholder="Descrição (opcional)" style="width:100%; padding:0.75rem; margin:0.5rem 0; border-radius:8px; border:1px solid #475569; background:#334155; color:#f1f5f9;" />
+      
+      <button onclick="saveSkill()" class="btn" style="width:100%; background:#38bdf8; color:#0f172a; margin-top:1rem;">Salvar</button>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://back-end-tf-web-beryl.vercel.app';
+    let currentUser = null;
+
+    // Verifica se está logado
+    function checkAuth() {
+      const storedUser = JSON.parse(localStorage.getItem('currentUser'));
+      if (!storedUser) {
+        alert('Você precisa estar logado para acessar esta página.');
+        window.location.href = 'login.html';
+        return false;
+      }
+      currentUser = storedUser;
+      return true;
+    }
+
+    // Carrega o perfil do usuário logado
+    async function loadProfile() {
+      if (!checkAuth()) return;
+
+      try {
+        const res = await fetch(`${API_URL}/usuarios/${currentUser.id}`);
+        if (!res.ok) throw new Error('Usuário não encontrado');
+        const user = await res.json();
+
+        // Preenche o formulário
+        document.getElementById('name').value = user.name;
+        document.getElementById('email').value = user.email;
+        document.getElementById('contact').value = user.contact || '';
+        document.getElementById('photo_url').value = user.photo_url || '';
+
+        // Salva no localStorage atualizado
+        localStorage.setItem('currentUser', JSON.stringify(user));
+
+        // Exibe o formulário
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('profile-form').style.display = 'block';
+
+        // Carrega habilidades
+        renderSkills(user.skillsOffered || [], 'offered');
+        renderSkills(user.skillsWanted || [], 'wanted');
+      } catch (err) {
+        document.getElementById('loading').textContent = 'Erro ao carregar perfil: ' + err.message;
+        console.error(err);
+      }
+    }
+
+    // Renderiza lista de habilidades
+    function renderSkills(skills, type) {
+      const container = document.getElementById(`${type}-skills-list`);
+      container.innerHTML = skills.length > 0 
+        ? skills.map(s => `
+            <div style="background: #334155; padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong>${s.skill_name}</strong> (${s.level})
+                ${s.description ? `<br><small>${s.description}</small>` : ''}
+              </div>
+              <div>
+                <button type="button" onclick="editSkill('${type}', ${JSON.stringify(s).replace(/'/g, "\\'")})" style="background: #38bdf8; color: #0f172a; border: none; padding: 0.3rem 0.6rem; border-radius: 4px; margin-right: 0.3rem;">Editar</button>
+                <button type="button" onclick="deleteSkill('${type}', '${s.skill_name}')" style="background: #ef4444; color: white; border: none; padding: 0.3rem 0.6rem; border-radius: 4px;">Remover</button>
+              </div>
+            </div>
+          `).join('')
+        : '<p style="color: #94a3b8;">Nenhuma habilidade cadastrada.</p>';
+    }
+
+    // Salva alterações do perfil
+    document.getElementById('editForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!currentUser) return;
+
+      const data = {
+        name: document.getElementById('name').value,
+        contact: document.getElementById('contact').value,
+        photo_url: document.getElementById('photo_url').value
+      };
+
+      try {
+        const res = await fetch(`${API_URL}/usuarios/${currentUser.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+          alert('Perfil atualizado com sucesso!');
+          // Atualiza localStorage
+          const updatedUser = { ...currentUser, ...data };
+          localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+          currentUser = updatedUser;
+        } else {
+          throw new Error('Falha ao atualizar');
+        }
+      } catch (err) {
+        alert('Erro ao salvar: ' + err.message);
+      }
+    });
+
+    // Modal de habilidades
+    let currentSkillType = null;
+    function showSkillModal(type) {
+      currentSkillType = type;
+      document.getElementById('modal-title').textContent = type === 'offered' ? 'Ofereço: Nova Habilidade' : 'Quero Aprender: Nova Habilidade';
+      document.getElementById('skill-type').value = type;
+      document.getElementById('skill-id').value = '';
+      document.getElementById('skill-name').value = '';
+      document.getElementById('skill-level').value = 'iniciante';
+      document.getElementById('skill-desc').value = '';
+      document.getElementById('skillModal').style.display = 'flex';
+    }
+
+    function closeSkillModal() {
+      document.getElementById('skillModal').style.display = 'none';
+    }
+
+    function editSkill(type, skill) {
+      currentSkillType = type;
+      document.getElementById('modal-title').textContent = 'Editar Habilidade';
+      document.getElementById('skill-type').value = type;
+      document.getElementById('skill-name').value = skill.skill_name;
+      document.getElementById('skill-level').value = skill.level;
+      document.getElementById('skill-desc').value = skill.description || '';
+      document.getElementById('skill-id').value = skill.skill_name; // usamos nome como ID para DELETE
+      document.getElementById('skillModal').style.display = 'flex';
+    }
+
+    // Salva ou atualiza habilidade
+    async function saveSkill() {
+      if (!currentUser) return;
+      
+      const type = document.getElementById('skill-type').value;
+      const name = document.getElementById('skill-name').value.trim();
+      const level = document.getElementById('skill-level').value;
+      const desc = document.getElementById('skill-desc').value.trim();
+      const oldName = document.getElementById('skill-id').value;
+
+      if (!name) {
+        alert('O nome da habilidade é obrigatório.');
+        return;
+      }
+
+      try {
+        // Se for edição, primeiro remove a antiga
+        if (oldName && oldName !== name) {
+          await deleteSkillApi(type, oldName);
+        }
+
+        // Adiciona/atualiza
+        const endpoint = type === 'offered' 
+          ? `/usuarios/${currentUser.id}/skills/offered`
+          : `/usuarios/${currentUser.id}/skills/wanted`;
+
+        const res = await fetch(API_URL + endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ skill_name: name, level, description: desc })
+        });
+
+        if (res.ok) {
+          closeSkillModal();
+          loadProfile(); // recarrega tudo
+        } else {
+          throw new Error('Falha ao salvar habilidade');
+        }
+      } catch (err) {
+        alert('Erro: ' + err.message);
+      }
+    }
+
+    // Remove habilidade
+    async function deleteSkill(type, skillName) {
+      if (!confirm(`Tem certeza que deseja remover "${skillName}"?`)) return;
+      
+      try {
+        await deleteSkillApi(type, skillName);
+        loadProfile();
+      } catch (err) {
+        alert('Erro ao remover: ' + err.message);
+      }
+    }
+
+    async function deleteSkillApi(type, skillName) {
+      const encodedName = encodeURIComponent(skillName);
+      const endpoint = type === 'offered'
+        ? `/usuarios/${currentUser.id}/skills/offered/${encodedName}`
+        : `/usuarios/${currentUser.id}/skills/wanted/${encodedName}`;
+
+      const res = await fetch(API_URL + endpoint, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Falha ao remover');
+    }
+
+    // Inicializa
+    loadProfile();
+  </script>
 </body>
 </html>

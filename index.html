@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SkillSwap - Troque Habilidades</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
+
 <body>
   <header>
     <h1>SkillSwap</h1>
@@ -67,24 +69,37 @@
         return;
       }
 
-      container.innerHTML = users.map(user => {
+      // Obtém o ID do usuário logado
+      const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+      const currentUserId = currentUser ? currentUser.id : null;
+
+      // Filtra: remove o próprio usuário da lista
+      const filteredUsers = currentUserId
+        ? users.filter(user => user.id !== currentUserId)
+        : users;
+
+      if (filteredUsers.length === 0) {
+        container.innerHTML = '<p>Nenhum outro usuário encontrado.</p>';
+        return;
+      }
+
+      container.innerHTML = filteredUsers.map(user => {
         const offered = user.skillsOffered || [];
-        // Link simplificado: só o ID do perfil
         const profileUrl = `perfil.html?id=${user.id}`;
 
         return `
-          <div class="user-card" onclick="window.location.href='${profileUrl}'">
-            <h3>${user.name || 'Sem nome'}</h3>
-            <p><strong>Contato:</strong> ${user.contact || 'Não informado'}</p>
-            <h4>Habilidades que oferece:</h4>
-            <ul>
-              ${offered.length > 0
-                ? offered.map(s => `<li><strong>${s.skill_name || s.name || 'Habilidade'}</strong> (${s.level || 'nível?'})<br>${s.description || ''}</li>`).join('')
-                : '<li>Nenhuma habilidade cadastrada</li>'
-              }
-            </ul>
-          </div>
-        `;
+      <div class="user-card" onclick="window.location.href='${profileUrl}'">
+        <h3>${user.name || 'Sem nome'}</h3>
+        <p><strong>Contato:</strong> ${user.contact || 'Não informado'}</p>
+        <h4>Habilidades que oferece:</h4>
+        <ul>
+          ${offered.length > 0
+            ? offered.map(s => `<li><strong>${s.skill_name || s.name || 'Habilidade'}</strong> (${s.level || 'nível?'})<br>${s.description || ''}</li>`).join('')
+            : '<li>Nenhuma habilidade cadastrada</li>'
+          }
+        </ul>
+      </div>
+    `;
       }).join('');
     }
 
@@ -93,4 +108,5 @@
     loadUsers();
   </script>
 </body>
+
 </html>
