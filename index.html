@@ -97,7 +97,7 @@
 
   if (currentUser) {
     // Mostra avatar
-    const photoUrl = currentUser.photo_url || 'images/default-avatar.png';
+    const photoUrl = currentUser.photo_url || 'images/image.png';
     avatarImg.src = photoUrl;
     avatarImg.style.display = 'block';
     avatarImg.onclick = () => {
@@ -162,7 +162,7 @@
     container.innerHTML = filteredUsers.map(user => {
       const offered = user.skillsOffered || [];
       const profileUrl = `perfil.html?id=${user.id}`;
-      const photoUrl = user.photo_url || 'images/default-avatar.png'; // ← Fallback
+      const photoUrl = user.photo_url || 'images/image.png'; // ← Fallback
 
       return `
         <div class="user-card" onclick="window.location.href='${profileUrl}'">
